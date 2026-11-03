@@ -65,7 +65,7 @@ const SLOTS = [
   { page: 1, input: 0, x: 141, w: 330, y: 210, size: 13 }, // મોહતરમ જનાબ ........
 ];
 const FONT = '"Noto Sans Gujarati"';
-const GAP = 4, SCALE = 4;
+const GAP = 4, PAD = 6, SCALE = 4;
 
 const $ = id => document.getElementById(id);
 const inputs = [$('l1'), $('l2'), $('l3')];
@@ -82,9 +82,9 @@ function textCanvas(text, slot) {
   ctx.font = `700 ${size}px ${FONT}`;
   while (ctx.measureText(text).width > slot.w - 8 && size > 7) ctx.font = `700 ${--size}px ${FONT}`;
   ctx.fillStyle = '#111';
-  ctx.textAlign = 'center';
+  ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(text, slot.w / 2, h - GAP);
+  ctx.fillText(text, PAD, h - GAP);
   return c;
 }
 
