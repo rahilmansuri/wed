@@ -177,14 +177,16 @@ const PAGES = [
 ];
 // Where each input is written: page index, input index, left x, width, and the line's y
 // (all in points from the top-left). Text sits just above the line.
+// `ink` is sampled from the printed text on that page.
 const SLOTS = [
-  { page: 0, input: 0, x: 198, w: 254, y: 355, size: 17 },
-  { page: 0, input: 1, x: 199, w: 253, y: 387.5, size: 17 },
-  { page: 0, input: 2, x: 200, w: 252, y: 419.5, size: 17 },
-  { page: 1, input: 0, x: 124, w: 326, y: 215, size: 13 }, // મોહતરમ જનાબ ........
+  { page: 0, input: 0, x: 198, w: 254, y: 355, size: 17, ink: '#2a2f33' },
+  { page: 0, input: 1, x: 199, w: 253, y: 387.5, size: 17, ink: '#2a2f33' },
+  { page: 0, input: 2, x: 200, w: 252, y: 419.5, size: 17, ink: '#2a2f33' },
+  // મોહતરમ જનાબ ........ — baseline matches the printed text, which sits on the dots.
+  { page: 1, input: 0, x: 124, w: 326, y: 219.5, size: 15, ink: '#45303a' },
 ];
 // Rasa is the closest free match to the card's Gujarati lettering.
-const FONT = 'Rasa', WEIGHT = 600, INK = '#1f2533';
+const FONT = 'Rasa', WEIGHT = 600;
 const GAP = 4, PAD = 6, SCALE = 4;
 
 const $ = id => document.getElementById(id);
@@ -201,7 +203,7 @@ function textCanvas(text, slot) {
   let size = slot.size;
   ctx.font = `${WEIGHT} ${size}px ${FONT}`;
   while (ctx.measureText(text).width > slot.w - PAD * 2 && size > 7) ctx.font = `${WEIGHT} ${--size}px ${FONT}`;
-  ctx.fillStyle = INK;
+  ctx.fillStyle = slot.ink;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(text, PAD, h - GAP);
@@ -311,9 +313,11 @@ if (params.has('pages')) {
 
 (async () => {
   try {
-    await document.fonts.load(`${WEIGHT} 17px ${FONT}`, 'જનાબ');
+    // Load both the Gujarati and Latin parts of the font so English names match too.
+    await document.fonts.load(`${WEIGHT} 17px ${FONT}`, 'જનાબ Aa');
     await Promise.all(PAGES.map(p => { p.img = new Image(); p.img.src = p.src; return p.img.decode(); }));
     drawPreview();
+    document.fonts.addEventListener('loadingdone', drawPreview);
     pdfBytes = await (await fetch(PDF_URL)).arrayBuffer();
     $('download').disabled = false;
     const probe = new File([''], 'x.pdf', { type: 'application/pdf' });
