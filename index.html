@@ -13,6 +13,12 @@
     --plum: #3b2238; --plum-2: #5a3554; --gold: #b8935a; --gold-soft: #e9dcc4;
     --paper: #f7f3ec; --card: #fffdf9; --ink: #1f2533; --muted: #7a6f6a; --line: #e4d9c8;
   }
+  /* Reception uses the card's sky-blue and brown instead of the wedding plum and gold. */
+  body[data-event="reception"] {
+    --plum: #5b3a2a; --plum-2: #7a5442; --gold: #a07850; --gold-soft: #f3e7da;
+    --paper: #eef3f7; --card: #fff; --line: #d6e0e8; --muted: #6f7378;
+  }
+  body[data-event="wedding"] [data-for="reception"], body[data-event="reception"] [data-for="wedding"] { display: none !important; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; }
   body {
@@ -31,6 +37,10 @@
     background: radial-gradient(circle at 12px 18px, var(--paper) 11px, transparent 12px) repeat-x;
     background-size: 24px 18px;
   }
+  body[data-event="reception"] header { background: linear-gradient(180deg, #c9dcec, #e6eff6); color: var(--plum); }
+  body[data-event="reception"] .couple { font: 400 clamp(44px, 13vw, 64px) 'Pinyon Script', serif; color: var(--plum); margin: 4px 0 0; }
+  body[data-event="reception"] .eyebrow { font: 400 26px 'Pinyon Script', serif; }
+  body[data-event="reception"] .date { font: 600 15px Rasa, serif; letter-spacing: .04em; }
   .eyebrow { font: 600 15px Rasa, serif; color: var(--gold); margin: 0; }
   .couple { font-family: Rasa, serif; font-weight: 700; font-size: clamp(30px, 9vw, 46px); line-height: 1.15; margin: 8px 0 4px; color: #fff; }
   .couple .amp { color: var(--gold); font-size: .7em; display: inline-block; margin: 0 .25em; }
@@ -40,6 +50,17 @@
   main { max-width: 1040px; margin: 0 auto; padding: 8px 16px 24px; display: grid; gap: 20px; }
   @media (min-width: 860px) { main { grid-template-columns: 360px 1fr; align-items: start; padding-top: 24px; } }
 
+  .switch {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 5px; margin: -34px 0 0; position: relative; z-index: 2;
+    background: var(--card); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  }
+  @media (min-width: 860px) { .switch { grid-column: 1 / -1; max-width: 420px; justify-self: center; width: 100%; } }
+  .switch button {
+    height: 46px; border: 0; border-radius: 999px; background: transparent; cursor: pointer; color: var(--muted);
+    font: 700 18px Rasa, serif; transition: .2s;
+  }
+  .switch button.rc { font: 400 24px 'Pinyon Script', Rasa, serif; }
+  .switch button[aria-selected="true"] { background: var(--plum); color: #fff; }
   .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 6px 24px rgba(59,34,56,.06); }
   @media (min-width: 860px) { .panel { position: sticky; top: 16px; } }
   .step { font-family: Rasa, serif; font-weight: 700; font-size: 20px; margin: 0 0 10px; color: var(--plum); display: flex; align-items: center; gap: 8px; }
@@ -57,8 +78,6 @@
 
   .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .chip { position: relative; }
-  .chip.wide { grid-column: 1 / -1; }
-  .chip.wide strong { font: 400 24px 'Pinyon Script', Rasa, serif; line-height: 1.1; }
   .chip input { position: absolute; opacity: 0; inset: 0; }
   .chip span {
     display: block; padding: 12px 12px 12px 40px; border: 1.5px solid var(--line); border-radius: 14px;
@@ -73,7 +92,9 @@
   .chip input:checked + span { border-color: var(--plum); background: #faf3f8; }
   .chip input:checked + span::before { background: var(--plum) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23e9dcc4' stroke-width='2'/%3E%3C/svg%3E") center/14px no-repeat; border-color: var(--plum); }
   .chip input:focus-visible + span { box-shadow: 0 0 0 3px rgba(184,147,90,.35); }
-  .field.en input { font: 400 26px 'Pinyon Script', Rasa, serif; padding-top: 20px; padding-bottom: 4px; }
+  .field.en input { font: 400 28px 'Pinyon Script', Rasa, serif; padding-top: 20px; padding-bottom: 4px; }
+  .event-info { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--paper); font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .event-info b { color: var(--plum); }
   .empty { text-align: center; color: var(--muted); padding: 40px 16px; border: 1.5px dashed var(--line); border-radius: 14px; margin: 0; width: 100%; }
   .hint { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
 
@@ -118,16 +139,28 @@
   #status.show { opacity: .92; }
 </style>
 </head>
-<body>
+<body data-event="wedding">
 <header>
-  <p class="eyebrow">જશ્ને શાદી</p>
-  <h1 class="couple">હુમાકૌશર<span class="amp">❦</span>સાઝ</h1>
-  <p class="date">૨૦ – ૨૩ નવેમ્બર ૨૦૨૬ · અમદાવાદ</p>
-  <div class="ornament">✦ ✦ ✦</div>
+  <div data-for="wedding">
+    <p class="eyebrow">જશ્ને શાદી</p>
+    <h1 class="couple">હુમાકૌશર<span class="amp">❦</span>સાઝ</h1>
+    <p class="date">૨૦ – ૨૧ નવેમ્બર ૨૦૨૬ · અમદાવાદ</p>
+    <div class="ornament">✦ ✦ ✦</div>
+  </div>
+  <div data-for="reception">
+    <p class="eyebrow">Better Together</p>
+    <h1 class="couple">Huma &amp; Saaz</h1>
+    <p class="date">RECEPTION · 23 NOV 2026 · 7 PM</p>
+  </div>
 </header>
 
 <main>
-  <section class="panel">
+  <div class="switch" role="tablist" aria-label="Event">
+    <button role="tab" data-event="wedding" aria-selected="true">જશ્ને શાદી</button>
+    <button role="tab" data-event="reception" class="rc" aria-selected="false">Reception</button>
+  </div>
+
+  <section class="panel" data-for="wedding">
     <h2 class="step"><b>૧</b>મહેમાનનું નામ</h2>
     <div class="field">
       <input id="l1" autocomplete="off" placeholder="મનસુરી રાહિલ હાજી ઈલિયાસએહમદ">
@@ -146,17 +179,21 @@
     <div class="chips">
       <label class="chip"><input type="checkbox" id="p3" checked><span><strong>આમ દાવત</strong><small>શુક્રવાર, ૨૦ નવે.</small></span></label>
       <label class="chip"><input type="checkbox" id="p4" checked><span><strong>નિકાહ</strong><small>શનિવાર, ૨૧ નવે.</small></span></label>
-      <label class="chip wide"><input type="checkbox" id="rc"><span><strong>Reception</strong><small>સોમવાર, ૨૩ નવે. · Alimento's Banquet</small></span></label>
-    </div>
-    <div class="field en" id="en-field" hidden>
-      <input id="en" autocomplete="off" placeholder="Rahil Mansuri &amp; Family">
-      <label for="en">Reception card પર નામ (English, વૈકલ્પિક)</label>
     </div>
     <p class="hint">પસંદ કરેલા પેજ જ PDF માં આવશે.</p>
   </section>
 
+  <section class="panel" data-for="reception">
+    <h2 class="step"><b>1</b>Guest name</h2>
+    <div class="field en">
+      <input id="en" autocomplete="off" placeholder="Rahil Mansuri &amp; Family">
+      <label for="en">Printed below “Better Together”</label>
+    </div>
+    <p class="event-info"><b>Reception</b> · Monday, 23rd Nov 2026 at 7 PM<br>Alimento's Banquet, S.G. Highway, Ahmedabad</p>
+  </section>
+
   <section>
-    <div class="preview-head"><h2>પ્રિવ્યુ</h2><span id="count"></span></div>
+    <div class="preview-head"><h2 data-for="wedding">પ્રિવ્યુ</h2><h2 data-for="reception">Preview</h2><span id="count"></span></div>
     <div class="pages" id="pages"></div>
     <div class="dots" id="dots"></div>
   </section>
@@ -177,16 +214,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script>
 const DOCS = ['invitation.pdf', 'reception.pdf'];
-// Every page that can go into the PDF: source doc + page index, preview image, size in points,
-// and the checkboxes that include it (any one ticked is enough).
+// Every page that can go into the PDF: which event it belongs to, source doc + page index,
+// preview image, size in points, and (wedding only) the checkboxes that include it.
 const PAGES = [
-  { doc: 0, index: 0, src: 'page1.jpg', w: 612, h: 629.5, when: ['p3', 'p4'] },
-  { doc: 0, index: 1, src: 'page2.jpg', w: 612, h: 620.7, when: ['p3', 'p4'] },
-  { doc: 0, index: 2, src: 'page3.jpg', w: 612, h: 620.7, when: ['p3'] }, // આમ દાવત
-  { doc: 0, index: 3, src: 'page4.jpg', w: 612, h: 626.6, when: ['p4'] }, // નિકાહ
-  { doc: 1, index: 0, src: 'reception.jpg', w: 1080, h: 1440, when: ['rc'] },
+  { event: 'wedding', doc: 0, index: 0, src: 'page1.jpg', w: 612, h: 629.5, when: ['p3', 'p4'] },
+  { event: 'wedding', doc: 0, index: 1, src: 'page2.jpg', w: 612, h: 620.7, when: ['p3', 'p4'] },
+  { event: 'wedding', doc: 0, index: 2, src: 'page3.jpg', w: 612, h: 620.7, when: ['p3'] }, // આમ દાવત
+  { event: 'wedding', doc: 0, index: 3, src: 'page4.jpg', w: 612, h: 626.6, when: ['p4'] }, // નિકાહ
+  { event: 'reception', doc: 1, index: 0, src: 'reception.jpg', w: 1080, h: 1440 },
 ];
-const TOGGLES = ['p3', 'p4', 'rc'];
+const TOGGLES = ['p3', 'p4'];
+const EVENTS = {
+  wedding: { file: 'Jashne-Shadi', title: 'જશ્ને શાદી', theme: '#3b2238' },
+  reception: { file: 'Reception', title: 'Huma & Saaz — Reception', theme: '#c9dcec' },
+};
+let mode = 'wedding';
 // Where each input is written: page (index into PAGES), input index, box left x and width,
 // and the text baseline (all in points from the top-left). `ink` is sampled from the printed text.
 const RASA = { font: 'Rasa', weight: 600, align: 'left', pad: 6 };
@@ -232,12 +274,11 @@ function textCanvas(text, slot) {
 }
 const slotTop = s => s.base - s.size * 1.5;
 
-function values() {
-  const v = inputs.map(i => i.value.trim());
-  v[3] = v[3] || v[0]; // reception name falls back to the main name
-  return v;
+function values() { return inputs.map(i => i.value.trim()); }
+function included() {
+  return PAGES.map((p, i) => i)
+    .filter(i => PAGES[i].event === mode && (!PAGES[i].when || PAGES[i].when.some(id => $(id).checked)));
 }
-function included() { return PAGES.map((p, i) => i).filter(i => PAGES[i].when.some(id => $(id).checked)); }
 
 function filledSlots() {
   const v = values();
@@ -246,7 +287,6 @@ function filledSlots() {
 
 function drawPreview() {
   const slots = filledSlots(), pages = included();
-  $('en-field').hidden = !$('rc').checked;
   $('pages').innerHTML = '';
   $('dots').innerHTML = '';
   if (!pages.length) {
@@ -263,12 +303,12 @@ function drawPreview() {
       ctx.drawImage(s.canvas, s.x * r, slotTop(s) * r, s.w * r, s.canvas.height / SCALE * r);
     }
     const cap = document.createElement('figcaption');
-    cap.textContent = `પેજ ${n + 1} / ${pages.length}`;
+    cap.textContent = mode === 'wedding' ? `પેજ ${n + 1} / ${pages.length}` : 'Reception card';
     fig.append(c, cap);
     $('pages').append(fig);
     $('dots').append(document.createElement('i'));
   });
-  $('count').textContent = `${pages.length} પેજ`;
+  $('count').textContent = mode === 'wedding' ? `${pages.length} પેજ` : '';
   if (docBytes.length) $('download').disabled = $('share').disabled = !pages.length;
   updateDots();
 }
@@ -298,10 +338,23 @@ async function buildPdf() {
 }
 
 function fileName() {
-  const v = values(), onlyReception = included().every(i => PAGES[i].doc === 1);
-  const n = (onlyReception ? v[3] : v[0]).replace(/[\\/:*?"<>|]+/g, '').trim();
-  return `${onlyReception ? 'Reception' : 'Jashne-Shadi'}${n ? ' - ' + n : ''}.pdf`;
+  const n = values()[mode === 'reception' ? 3 : 0].replace(/[\\/:*?"<>|]+/g, '').trim();
+  return `${EVENTS[mode].file}${n ? ' - ' + n : ''}.pdf`;
 }
+
+function setMode(m) {
+  mode = EVENTS[m] ? m : 'wedding';
+  document.body.dataset.event = mode;
+  document.querySelectorAll('.switch button').forEach(b => b.setAttribute('aria-selected', b.dataset.event === mode));
+  document.querySelector('meta[name=theme-color]').content = EVENTS[mode].theme;
+  document.title = EVENTS[mode].title;
+  const url = new URL(location.href);
+  if (mode === 'reception') url.searchParams.set('event', 'reception'); else url.searchParams.delete('event');
+  history.replaceState(null, '', url);
+  drawPreview();
+  $('pages').scrollLeft = 0;
+}
+document.querySelectorAll('.switch button').forEach(b => b.onclick = () => setMode(b.dataset.event));
 
 let toastTimer;
 function toast(msg, sticky) {
@@ -331,18 +384,22 @@ $('download').onclick = () => withBusy(async () => {
 
 $('share').onclick = () => withBusy(async () => {
   const file = new File([await buildPdf()], fileName(), { type: 'application/pdf' });
-  await navigator.share({ files: [file], title: 'જશ્ને શાદી' });
+  await navigator.share({ files: [file], title: EVENTS[mode].title });
 });
 
 inputs.forEach(i => i.addEventListener('input', drawPreview));
 TOGGLES.forEach(id => $(id).addEventListener('change', drawPreview));
 
-// Prefill from the URL, e.g. ?name=...&en=...&pages=3,r (pages: 3 = આમ દાવત, 4 = નિકાહ, r = Reception).
+// Prefill from the URL.
+//   Wedding:   ?name=...&l2=...&l3=...&pages=3,4   (3 = આમ દાવત, 4 = નિકાહ)
+//   Reception: ?event=reception&name=...
 const params = new URLSearchParams(location.search);
-['name', 'l2', 'l3', 'en'].forEach((k, i) => { if (params.get(k)) inputs[i].value = params.get(k); });
+mode = params.get('event') === 'reception' ? 'reception' : 'wedding';
+const keys = mode === 'reception' ? [null, null, null, 'name'] : ['name', 'l2', 'l3', null];
+keys.forEach((k, i) => { if (k && params.get(k)) inputs[i].value = params.get(k); });
 if (params.has('pages')) {
   const want = params.get('pages').split(',');
-  TOGGLES.forEach(id => $(id).checked = want.includes(id === 'rc' ? 'r' : id.slice(1)));
+  TOGGLES.forEach(id => $(id).checked = want.includes(id.slice(1)));
 }
 
 (async () => {
@@ -350,7 +407,7 @@ if (params.has('pages')) {
     // Load both the Gujarati and Latin parts of the font so English names match too.
     await Promise.all([document.fonts.load('600 17px Rasa', 'જનાબ Aa'), document.fonts.load('400 30px "Pinyon Script"', 'Aa')]);
     await Promise.all(PAGES.map(p => { p.img = new Image(); p.img.src = p.src; return p.img.decode(); }));
-    drawPreview();
+    setMode(mode);
     document.fonts.addEventListener('loadingdone', drawPreview);
     docBytes.push(...await Promise.all(DOCS.map(async u => (await fetch(u)).arrayBuffer())));
     const probe = new File([''], 'x.pdf', { type: 'application/pdf' });
