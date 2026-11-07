@@ -7,7 +7,7 @@
 <title>Jashne Shadi Invitation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rasa:wght@500;600;700&family=Noto+Sans+Gujarati:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rasa:wght@500;600;700&family=Pinyon+Script&family=Noto+Sans+Gujarati:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --plum: #3b2238; --plum-2: #5a3554; --gold: #b8935a; --gold-soft: #e9dcc4;
@@ -57,6 +57,8 @@
 
   .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .chip { position: relative; }
+  .chip.wide { grid-column: 1 / -1; }
+  .chip.wide strong { font: 400 24px 'Pinyon Script', Rasa, serif; line-height: 1.1; }
   .chip input { position: absolute; opacity: 0; inset: 0; }
   .chip span {
     display: block; padding: 12px 12px 12px 40px; border: 1.5px solid var(--line); border-radius: 14px;
@@ -71,6 +73,8 @@
   .chip input:checked + span { border-color: var(--plum); background: #faf3f8; }
   .chip input:checked + span::before { background: var(--plum) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23e9dcc4' stroke-width='2'/%3E%3C/svg%3E") center/14px no-repeat; border-color: var(--plum); }
   .chip input:focus-visible + span { box-shadow: 0 0 0 3px rgba(184,147,90,.35); }
+  .field.en input { font: 400 26px 'Pinyon Script', Rasa, serif; padding-top: 20px; padding-bottom: 4px; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 16px; border: 1.5px dashed var(--line); border-radius: 14px; margin: 0; width: 100%; }
   .hint { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
 
   .preview-head { display: flex; justify-content: space-between; align-items: baseline; margin: 0 2px 8px; }
@@ -118,7 +122,7 @@
 <header>
   <p class="eyebrow">જશ્ને શાદી</p>
   <h1 class="couple">હુમાકૌશર<span class="amp">❦</span>સાઝ</h1>
-  <p class="date">૨૦ – ૨૧ નવેમ્બર ૨૦૨૬ · અમદાવાદ</p>
+  <p class="date">૨૦ – ૨૩ નવેમ્બર ૨૦૨૬ · અમદાવાદ</p>
   <div class="ornament">✦ ✦ ✦</div>
 </header>
 
@@ -142,6 +146,11 @@
     <div class="chips">
       <label class="chip"><input type="checkbox" id="p3" checked><span><strong>આમ દાવત</strong><small>શુક્રવાર, ૨૦ નવે.</small></span></label>
       <label class="chip"><input type="checkbox" id="p4" checked><span><strong>નિકાહ</strong><small>શનિવાર, ૨૧ નવે.</small></span></label>
+      <label class="chip wide"><input type="checkbox" id="rc"><span><strong>Reception</strong><small>સોમવાર, ૨૩ નવે. · Alimento's Banquet</small></span></label>
+    </div>
+    <div class="field en" id="en-field" hidden>
+      <input id="en" autocomplete="off" placeholder="Rahil Mansuri &amp; Family">
+      <label for="en">Reception card પર નામ (English, વૈકલ્પિક)</label>
     </div>
     <p class="hint">પસંદ કરેલા પેજ જ PDF માં આવશે.</p>
   </section>
@@ -167,51 +176,68 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script>
-const PDF_URL = 'invitation.pdf';
-// Preview image and size (PDF points) of every page. `opt` pages can be toggled off.
+const DOCS = ['invitation.pdf', 'reception.pdf'];
+// Every page that can go into the PDF: source doc + page index, preview image, size in points,
+// and the checkboxes that include it (any one ticked is enough).
 const PAGES = [
-  { src: 'page1.jpg', w: 612, h: 629.5 },
-  { src: 'page2.jpg', w: 612, h: 620.7 },
-  { src: 'page3.jpg', w: 612, h: 620.7, opt: 'p3' }, // આમ દાવત
-  { src: 'page4.jpg', w: 612, h: 626.6, opt: 'p4' }, // નિકાહ
+  { doc: 0, index: 0, src: 'page1.jpg', w: 612, h: 629.5, when: ['p3', 'p4'] },
+  { doc: 0, index: 1, src: 'page2.jpg', w: 612, h: 620.7, when: ['p3', 'p4'] },
+  { doc: 0, index: 2, src: 'page3.jpg', w: 612, h: 620.7, when: ['p3'] }, // આમ દાવત
+  { doc: 0, index: 3, src: 'page4.jpg', w: 612, h: 626.6, when: ['p4'] }, // નિકાહ
+  { doc: 1, index: 0, src: 'reception.jpg', w: 1080, h: 1440, when: ['rc'] },
 ];
-// Where each input is written: page index, input index, left x, width, and the line's y
-// (all in points from the top-left). Text sits just above the line.
-// `ink` is sampled from the printed text on that page.
+const TOGGLES = ['p3', 'p4', 'rc'];
+// Where each input is written: page (index into PAGES), input index, box left x and width,
+// and the text baseline (all in points from the top-left). `ink` is sampled from the printed text.
+const RASA = { font: 'Rasa', weight: 600, align: 'left', pad: 6 };
 const SLOTS = [
-  { page: 0, input: 0, x: 198, w: 254, y: 355, size: 17, ink: '#2a2f33' },
-  { page: 0, input: 1, x: 199, w: 253, y: 387.5, size: 17, ink: '#2a2f33' },
-  { page: 0, input: 2, x: 200, w: 252, y: 419.5, size: 17, ink: '#2a2f33' },
+  { ...RASA, page: 0, input: 0, x: 198, w: 254, base: 351, size: 17, ink: '#2a2f33' },
+  { ...RASA, page: 0, input: 1, x: 199, w: 253, base: 383.5, size: 17, ink: '#2a2f33' },
+  { ...RASA, page: 0, input: 2, x: 200, w: 252, base: 415.5, size: 17, ink: '#2a2f33' },
   // મોહતરમ જનાબ ........ — baseline matches the printed text, which sits on the dots.
-  { page: 1, input: 0, x: 124, w: 326, y: 219.5, size: 15, ink: '#45303a' },
+  { ...RASA, page: 1, input: 0, x: 124, w: 326, base: 215.5, size: 15, ink: '#45303a' },
+  // Reception: under "Better Together", centred on the card (cx) but pushed left when long so it
+  // stays clear of the "g" descender at x ≈ 668.
+  // Gujarati text falls back to Rasa, which looks much larger, so it is scaled down.
+  { page: 4, input: 3, x: 175, w: 480, cx: 540, base: 241, size: 48, gujScale: 0.6, ink: '#3d2c23',
+    font: '"Pinyon Script", Rasa', weight: 400, align: 'center', pad: 0 },
 ];
-// Rasa is the closest free match to the card's Gujarati lettering.
-const FONT = 'Rasa', WEIGHT = 600;
-const GAP = 4, PAD = 6, SCALE = 4;
+const SCALE = 4;
 
 const $ = id => document.getElementById(id);
-const inputs = [$('l1'), $('l2'), $('l3')];
-let pdfBytes;
+const inputs = [$('l1'), $('l2'), $('l3'), $('en')];
+const docBytes = [];
 
 // Text is drawn on a canvas so the browser shapes Gujarati correctly, then embedded as an image.
+// The canvas leaves 1.5em above the baseline and 0.7em below it.
 function textCanvas(text, slot) {
-  const h = slot.size * 1.8;
+  const h = slot.size * 2.2;
   const c = document.createElement('canvas');
   c.width = slot.w * SCALE; c.height = h * SCALE;
   const ctx = c.getContext('2d');
   ctx.scale(SCALE, SCALE);
-  let size = slot.size;
-  ctx.font = `${WEIGHT} ${size}px ${FONT}`;
-  while (ctx.measureText(text).width > slot.w - PAD * 2 && size > 7) ctx.font = `${WEIGHT} ${--size}px ${FONT}`;
+  let size = slot.gujScale && /[\u0A80-\u0AFF]/.test(text) ? Math.round(slot.size * slot.gujScale) : slot.size;
+  const font = () => `${slot.weight} ${size}px ${slot.font}`;
+  ctx.font = font();
+  while (ctx.measureText(text).width > slot.w - slot.pad * 2 && size > 7) { size--; ctx.font = font(); }
   ctx.fillStyle = slot.ink;
-  ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(text, PAD, h - GAP);
+  let left = slot.pad;
+  if (slot.align === 'center') {
+    const tw = ctx.measureText(text).width;
+    left = Math.min(Math.max(slot.cx - slot.x - tw / 2, 0), slot.w - tw);
+  }
+  ctx.fillText(text, left, slot.size * 1.5);
   return c;
 }
+const slotTop = s => s.base - s.size * 1.5;
 
-function values() { return inputs.map(i => i.value.trim()); }
-function included() { return PAGES.map((p, i) => i).filter(i => !PAGES[i].opt || $(PAGES[i].opt).checked); }
+function values() {
+  const v = inputs.map(i => i.value.trim());
+  v[3] = v[3] || v[0]; // reception name falls back to the main name
+  return v;
+}
+function included() { return PAGES.map((p, i) => i).filter(i => PAGES[i].when.some(id => $(id).checked)); }
 
 function filledSlots() {
   const v = values();
@@ -219,19 +245,22 @@ function filledSlots() {
 }
 
 function drawPreview() {
-  const r = 2, slots = filledSlots(), pages = included();
+  const slots = filledSlots(), pages = included();
+  $('en-field').hidden = !$('rc').checked;
   $('pages').innerHTML = '';
   $('dots').innerHTML = '';
+  if (!pages.length) {
+    $('pages').innerHTML = '<p class="empty">કોઈ આમંત્રણ પસંદ કર્યું નથી.</p>';
+  }
   pages.forEach((pi, n) => {
-    const p = PAGES[pi];
+    const p = PAGES[pi], r = 1224 / p.w;
     const fig = document.createElement('figure');
     const c = document.createElement('canvas');
     c.width = p.w * r; c.height = p.h * r;
     const ctx = c.getContext('2d');
     ctx.drawImage(p.img, 0, 0, c.width, c.height);
     for (const s of slots.filter(s => s.page === pi)) {
-      const h = s.canvas.height / SCALE;
-      ctx.drawImage(s.canvas, s.x * r, (s.y - h) * r, s.w * r, h * r);
+      ctx.drawImage(s.canvas, s.x * r, slotTop(s) * r, s.w * r, s.canvas.height / SCALE * r);
     }
     const cap = document.createElement('figcaption');
     cap.textContent = `પેજ ${n + 1} / ${pages.length}`;
@@ -240,6 +269,7 @@ function drawPreview() {
     $('dots').append(document.createElement('i'));
   });
   $('count').textContent = `${pages.length} પેજ`;
+  if (docBytes.length) $('download').disabled = $('share').disabled = !pages.length;
   updateDots();
 }
 
@@ -252,21 +282,25 @@ function updateDots() {
 $('pages').addEventListener('scroll', updateDots, { passive: true });
 
 async function buildPdf() {
-  const doc = await PDFLib.PDFDocument.load(pdfBytes);
+  const docs = await Promise.all(docBytes.map(b => PDFLib.PDFDocument.load(b)));
   for (const s of filledSlots()) {
-    const page = doc.getPage(s.page);
+    const p = PAGES[s.page], doc = docs[p.doc], page = doc.getPage(p.index);
     const png = await doc.embedPng(s.canvas.toDataURL('image/png'));
     const h = s.canvas.height / SCALE;
-    page.drawImage(png, { x: s.x, y: page.getSize().height - s.y, width: s.w, height: h });
+    page.drawImage(png, { x: s.x, y: page.getSize().height - slotTop(s) - h, width: s.w, height: h });
   }
-  const keep = included();
-  for (let i = PAGES.length - 1; i >= 0; i--) if (!keep.includes(i)) doc.removePage(i);
-  return doc.save();
+  const out = await PDFLib.PDFDocument.create();
+  for (const i of included()) {
+    const [page] = await out.copyPages(docs[PAGES[i].doc], [PAGES[i].index]);
+    out.addPage(page);
+  }
+  return out.save();
 }
 
 function fileName() {
-  const n = values()[0].replace(/[\\/:*?"<>|]+/g, '').trim();
-  return `Jashne-Shadi${n ? ' - ' + n : ''}.pdf`;
+  const v = values(), onlyReception = included().every(i => PAGES[i].doc === 1);
+  const n = (onlyReception ? v[3] : v[0]).replace(/[\\/:*?"<>|]+/g, '').trim();
+  return `${onlyReception ? 'Reception' : 'Jashne-Shadi'}${n ? ' - ' + n : ''}.pdf`;
 }
 
 let toastTimer;
@@ -283,7 +317,7 @@ async function withBusy(fn) {
   toast('PDF તૈયાર થાય છે…', true);
   try { await fn(); toast('તૈયાર ✓'); }
   catch (e) { if (e.name === 'AbortError') toast('રદ કર્યું'); else { console.error(e); toast('Error: ' + e.message); } }
-  finally { btns.forEach(b => b.disabled = false); }
+  finally { btns.forEach(b => b.disabled = !included().length); }
 }
 
 $('download').onclick = () => withBusy(async () => {
@@ -301,27 +335,27 @@ $('share').onclick = () => withBusy(async () => {
 });
 
 inputs.forEach(i => i.addEventListener('input', drawPreview));
-['p3', 'p4'].forEach(id => $(id).addEventListener('change', drawPreview));
+TOGGLES.forEach(id => $(id).addEventListener('change', drawPreview));
 
-// Prefill from the URL, e.g. ?name=...&l2=...&pages=3 (pages lists the optional pages to include).
+// Prefill from the URL, e.g. ?name=...&en=...&pages=3,r (pages: 3 = આમ દાવત, 4 = નિકાહ, r = Reception).
 const params = new URLSearchParams(location.search);
-['name', 'l2', 'l3'].forEach((k, i) => { if (params.get(k)) inputs[i].value = params.get(k); });
+['name', 'l2', 'l3', 'en'].forEach((k, i) => { if (params.get(k)) inputs[i].value = params.get(k); });
 if (params.has('pages')) {
   const want = params.get('pages').split(',');
-  ['p3', 'p4'].forEach(id => $(id).checked = want.includes(id.slice(1)));
+  TOGGLES.forEach(id => $(id).checked = want.includes(id === 'rc' ? 'r' : id.slice(1)));
 }
 
 (async () => {
   try {
     // Load both the Gujarati and Latin parts of the font so English names match too.
-    await document.fonts.load(`${WEIGHT} 17px ${FONT}`, 'જનાબ Aa');
+    await Promise.all([document.fonts.load('600 17px Rasa', 'જનાબ Aa'), document.fonts.load('400 30px "Pinyon Script"', 'Aa')]);
     await Promise.all(PAGES.map(p => { p.img = new Image(); p.img.src = p.src; return p.img.decode(); }));
     drawPreview();
     document.fonts.addEventListener('loadingdone', drawPreview);
-    pdfBytes = await (await fetch(PDF_URL)).arrayBuffer();
-    $('download').disabled = false;
+    docBytes.push(...await Promise.all(DOCS.map(async u => (await fetch(u)).arrayBuffer())));
     const probe = new File([''], 'x.pdf', { type: 'application/pdf' });
-    if (navigator.canShare && navigator.canShare({ files: [probe] })) { $('share').hidden = false; $('share').disabled = false; }
+    if (navigator.canShare && navigator.canShare({ files: [probe] })) $('share').hidden = false;
+    drawPreview();
   } catch (e) {
     console.error(e);
     toast('Could not load invitation (' + e.message + ')', true);
