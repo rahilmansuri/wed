@@ -231,17 +231,19 @@ const EVENTS = {
 let mode = 'wedding';
 // Where each input is written: page (index into PAGES), input index, box left x and width,
 // and the text baseline (all in points from the top-left). `ink` is sampled from the printed text.
-const RASA = { font: 'Rasa', weight: 600, align: 'left', pad: 6 };
+// Names are printed in a rich accent ink (not the card's grey) so they stand out; `stroke` thickens
+// the letters and every name gets a soft shadow so it looks pressed into the card.
+const RASA = { font: 'Rasa', weight: 700, align: 'left', pad: 6 };
 const SLOTS = [
-  { ...RASA, page: 0, input: 0, x: 198, w: 254, base: 351, size: 17, ink: '#2a2f33' },
-  { ...RASA, page: 0, input: 1, x: 199, w: 253, base: 383.5, size: 17, ink: '#2a2f33' },
-  { ...RASA, page: 0, input: 2, x: 200, w: 252, base: 415.5, size: 17, ink: '#2a2f33' },
+  { ...RASA, page: 0, input: 0, x: 198, w: 254, base: 351, size: 21, stroke: 0.3, ink: '#6b1430' },
+  { ...RASA, page: 0, input: 1, x: 199, w: 253, base: 383.5, size: 19, stroke: 0.3, ink: '#6b1430' },
+  { ...RASA, page: 0, input: 2, x: 200, w: 252, base: 415.5, size: 19, stroke: 0.3, ink: '#6b1430' },
   // મોહતરમ જનાબ ........ — baseline matches the printed text, which sits on the dots.
-  { ...RASA, page: 1, input: 0, x: 124, w: 326, base: 215.5, size: 15, ink: '#45303a' },
+  { ...RASA, page: 1, input: 0, x: 124, w: 326, base: 215.5, size: 17, stroke: 0.25, ink: '#5c0f2a' },
   // Reception: under "Better Together", centred on the card (cx) but pushed left when long so it
   // stays clear of the "g" descender at x ≈ 668.
   // Gujarati text falls back to Rasa, which looks much larger, so it is scaled down.
-  { page: 4, input: 3, x: 175, w: 480, cx: 540, base: 241, size: 48, gujScale: 0.6, ink: '#3d2c23',
+  { page: 4, input: 3, x: 175, w: 480, cx: 540, base: 239, size: 54, gujScale: 0.55, stroke: 0.9, ink: '#5a2a12',
     font: '"Pinyon Script", Rasa', weight: 400, align: 'center', pad: 0 },
 ];
 const SCALE = 4;
@@ -268,6 +270,15 @@ function textCanvas(text, slot) {
   if (slot.align === 'center') {
     const tw = ctx.measureText(text).width;
     left = Math.min(Math.max(slot.cx - slot.x - tw / 2, 0), slot.w - tw);
+  }
+  ctx.shadowColor = 'rgba(0,0,0,.25)';
+  ctx.shadowBlur = 1.2;
+  ctx.shadowOffsetY = 0.6;
+  if (slot.stroke) {
+    ctx.strokeStyle = slot.ink;
+    ctx.lineWidth = slot.stroke;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(text, left, slot.size * 1.5);
   }
   ctx.fillText(text, left, slot.size * 1.5);
   return c;
