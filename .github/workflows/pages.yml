@@ -26,7 +26,7 @@ jobs:
       - name: Collect site files
         run: |
           mkdir _site
-          cp index.html invitation.pdf page1.jpg page2.jpg _site/
+          cp index.html invitation.pdf page1.jpg page2.jpg page3.jpg page4.jpg _site/
           touch _site/.nojekyll
 
       - uses: actions/configure-pages@v5
